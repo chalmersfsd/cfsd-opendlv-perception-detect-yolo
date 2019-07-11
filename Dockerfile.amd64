@@ -1,0 +1,47 @@
+# Copyright (C) 2019 Ola Benderius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+FROM nvidia/cuda:10.0-devel-ubuntu18.04 as builder
+RUN apt-get update && \
+    apt-get install -y \
+        cmake \
+        build-essential \
+        git
+
+RUN git clone https://github.com/AlexeyAB/darknet && cd darknet && \
+    sed -i 's/\(GPU=\).*/\11/' Makefile && \
+    sed -i 's/\(LIBSO=\).*/\11/' Makefile && \
+    make && cp libdarknet.so /usr/lib && \
+    cp include/darknet.h include/yolo_v2_class.hpp /usr/include
+        
+ADD . /opt/sources
+WORKDIR /opt/sources
+RUN ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64/stubs && \
+    mkdir build && \
+    cd build && \
+    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp .. && \
+    make && make install
+
+
+FROM nvidia/cuda:10.0-runtime-ubuntu18.04
+
+#RUN apt-get update && \
+#    apt-get install -y \
+
+WORKDIR /usr/bin
+COPY --from=builder /tmp/bin/opendlv-perception-detect-yolo .
+COPY --from=builder /usr/lib/libdarknet.so /usr/lib
+ENV NO_AT_BRIDGE=1
