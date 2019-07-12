@@ -26,29 +26,32 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 
-static char getPixelExtendArgb(char *img, uint32_t w, uint32_t h, int32_t x, 
+static uint8_t getPixelExtendArgb(char *img, uint32_t w, uint32_t h, int32_t x, 
     int32_t y, uint32_t c)
 {
     if (x < 0 || x >= static_cast<int32_t>(w) || y < 0 
         || y >= static_cast<int32_t>(h)) {
       return 0.0f;
     }
-    return img[y * w * 4 + x * 4 + c];
+    return static_cast<uint8_t>(img[y * w * 4 + x * 4 + c]);
 }
 
 static float bilinearInterpolationArgb(char *img, uint32_t w, uint32_t h, 
     float x, float y, uint32_t c)
 {
-    uint32_t ix = static_cast<uint32_t>(floorf(x));
-    uint32_t iy = static_cast<uint32_t>(floorf(y));
+  uint32_t ix = static_cast<uint32_t>(floorf(x));
+  uint32_t iy = static_cast<uint32_t>(floorf(y));
 
-    float dx = x - ix;
-    float dy = y - iy;
+  float dx = x - ix;
+  float dy = y - iy;
 
-    return (1 - dy) * (1 - dx) * getPixelExtendArgb(img, w, h, ix, iy, c) +
-      dy * (1 - dx) * getPixelExtendArgb(img, w, h, ix, iy + 1, c) +
-      (1 - dy) * dx * getPixelExtendArgb(img, w, h, ix + 1, iy, c) +
-      dy * dx * getPixelExtendArgb(img, w, h, ix + 1, iy + 1, c);
+  float p1 = (1 - dy) * (1 - dx) * getPixelExtendArgb(img, w, h, ix, iy, c);
+  float p2 = dy * (1 - dx) * getPixelExtendArgb(img, w, h, ix, iy + 1, c);
+  float p3 = (1 - dy) * dx * getPixelExtendArgb(img, w, h, ix + 1, iy, c);
+  float p4 = dy * dx * getPixelExtendArgb(img, w, h, ix + 1, iy + 1, c);
+
+  return p1 + p2 + p3 + p4;
+  //return getPixelExtendArgb(img, w, h, ix, iy, c);
 }
 
 static void resizeArgbToYoloImg(char *imgSrc, float *imgDst, uint32_t wSrc,
@@ -58,7 +61,7 @@ static void resizeArgbToYoloImg(char *imgSrc, float *imgDst, uint32_t wSrc,
     for (uint32_t j = 0; j < hDst; ++j) {
       for (uint32_t i = 0; i < wDst; ++i) {
         float v = bilinearInterpolationArgb(imgSrc, wSrc, hSrc, i * wRatio, 
-            j * hRatio, c);
+            j * hRatio, 2 - c);
         imgDst[c * wDst * hDst + j * wDst + i] = v / 255.0f;
       }
     }
@@ -79,24 +82,22 @@ int32_t main(int32_t argc, char **argv) {
     std::cerr << "         --cid: OD4 session conference id" << std::endl;
     std::cerr << "         --cfg-file: Yolo configuration file" << std::endl;
     std::cerr << "         --weight-file: Yolo weight file" << std::endl;
-    std::cerr << "         --name: name of the shared memory for the ARGB "
+    std::cerr << "         --name: name of the shared memory for the ARGB and XYZ"
       << "formatted image (default: video0)" << std::endl;
-    std::cerr << "         --name-depth: name of the shared memory for the "
-      << "depth XYZ formatted image " << std::endl;
     std::cerr << "         --width: the width of the images " << std::endl;
     std::cerr << "         --width: the height of the images " << std::endl;
     std::cerr << "         --id: sender id of output messages" << std::endl;
     std::cerr << "         --verbose: prints diagnostics data to screen" 
       << std::endl;
     std::cerr << "Example: " << argv[0] << " --cfg-file=yolo.cfg "
-      << "--weight-file=yolo.weight --width=1270 --height=720 [--name=video0] "
+      << "--weight-file=yolo.weight --width=1280 --height=720 [--name=video0] "
       << "[--name-depth=video0-depth] [--id=0] [--verbose]" << std::endl;
   } else {
-    std::string const nameArgb{(commandlineArguments["name"].size() != 0) ? 
+    std::string const name{(commandlineArguments["name"].size() != 0) ? 
       commandlineArguments["name"] : "video0"};
-    std::string const nameDepth{
-      (commandlineArguments["name-depth"].size() != 0) ? 
-      commandlineArguments["name-depth"] : ""};
+    std::string const nameArgb{name + ".argb"};
+    std::string const nameXyz{name + ".xyz"};
+
     uint32_t const width{static_cast<uint32_t>(
         std::stoi(commandlineArguments["width"]))};
     uint32_t const height{static_cast<uint32_t>(
@@ -105,9 +106,35 @@ int32_t main(int32_t argc, char **argv) {
       static_cast<uint32_t>(std::stoi(commandlineArguments["height"])) : 0};
     bool const verbose{commandlineArguments.count("verbose") != 0};
 
+   /* char argbImage[] = {
+      0, static_cast<char>(-88), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, static_cast<char>(-88), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, static_cast<char>(-88), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, static_cast<char>(-88), 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, static_cast<char>(-88), 0, 0
+    };
+    float yoloImage[27];
+
+    resizeArgbToYoloImg(argbImage, yoloImage, 5, 5,
+        3, 3, 5.0f/3.0f, 5.0f/3.0f);
+
+    for (uint32_t n = 0; n < 3; ++n) {
+      for (uint32_t m = 0; m < 3; ++m) {
+        std::cout << yoloImage[n*m + n*3 + m] << " ";
+      }
+      std::cout << std::endl;
+    }
+
+
+    if (verbose) {
+      return 0;
+    }
+    */
+
     Detector detector(commandlineArguments["cfg-file"],
         commandlineArguments["weight-file"]);
 
+    std::cout << "Connecting to shared memory " << nameArgb << std::endl;
     std::unique_ptr<cluon::SharedMemory> shmArgb{
       new cluon::SharedMemory{nameArgb}};
     if (shmArgb && shmArgb->valid()) {
@@ -115,16 +142,12 @@ int32_t main(int32_t argc, char **argv) {
         << shmArgb->name() << " (" << shmArgb->size() 
         << " bytes)." << std::endl;
     
-      bool hasDepth{false};
-      std::unique_ptr<cluon::SharedMemory> shmDepth;
-      if (!nameDepth.empty()) {
-        shmDepth.reset(new cluon::SharedMemory{nameDepth});
-        if (shmDepth && shmDepth->valid()) {
-          std::clog << argv[0] << ": Attached to shared depth memory '" 
-            << shmDepth->name() << " (" << shmDepth->size() 
-            << " bytes)." << std::endl;
-          hasDepth = true;
-        }
+    std::cout << "Connecting to shared memory " << nameXyz << std::endl;
+      std::unique_ptr<cluon::SharedMemory> shmXyz{new cluon::SharedMemory{nameXyz}};
+      if (shmXyz && shmXyz->valid()) {
+        std::clog << argv[0] << ": Attached to shared depth memory '" 
+          << shmXyz->name() << " (" << shmXyz->size() 
+          << " bytes)." << std::endl;
       }
 
       image_t yoloImg;
@@ -149,6 +172,10 @@ int32_t main(int32_t argc, char **argv) {
         }
         shmArgb->unlock();
 
+        if (verbose) {
+          std::cout << "Detecting" << std::endl;
+        }
+
         std::vector<bbox_t> detections = detector.detect(yoloImg, 0.2f, true);
 
         for (auto &detection : detections) {
@@ -160,26 +187,24 @@ int32_t main(int32_t argc, char **argv) {
         
         detections = detector.tracking_id(detections, true, 5, 40);
 
-        if (hasDepth) {
-          shmDepth->wait();
-          shmDepth->lock();
-          {
-            char *depthData = shmDepth->data();
-            for (auto &detection : detections) {
-              uint32_t i = static_cast<uint32_t>(
-                  detection.x + detection.w * 0.5f);
-              uint32_t j = static_cast<uint32_t>(
-                  detection.y + detection.h * 0.5f);
-              
-              memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
-              memcpy(&detection.y_3d,
-                  depthData + (j * width * 16 + i * 16 + 4), 4);
-              memcpy(&detection.z_3d,
-                  depthData + (j * width * 16 + i * 16 + 8), 4);
-            }
+        shmXyz->wait();
+        shmXyz->lock();
+        {
+          char *depthData = shmXyz->data();
+          for (auto &detection : detections) {
+            uint32_t i = static_cast<uint32_t>(
+                detection.x + detection.w * 0.5f);
+            uint32_t j = static_cast<uint32_t>(
+                detection.y + detection.h * 0.5f);
+            
+            memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
+            memcpy(&detection.y_3d,
+                depthData + (j * width * 16 + i * 16 + 4), 4);
+            memcpy(&detection.z_3d,
+                depthData + (j * width * 16 + i * 16 + 8), 4);
           }
-          shmDepth->unlock();
         }
+        shmXyz->unlock();
     
         //   Output data
         if (verbose) {
