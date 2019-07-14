@@ -18,7 +18,8 @@ RUN apt-get update && \
     apt-get install -y \
         cmake \
         build-essential \
-        git
+        git \
+        libx11-dev
 
 RUN git clone https://github.com/AlexeyAB/darknet && cd darknet && \
     sed -i 's/\(GPU=\).*/\11/' Makefile && \
@@ -38,8 +39,9 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64/stubs && \
 
 FROM nvidia/cuda:10.0-runtime-ubuntu18.04
 
-#RUN apt-get update && \
-#    apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
+        libx11-6
 
 WORKDIR /usr/bin
 COPY --from=builder /tmp/bin/opendlv-perception-detect-yolo .

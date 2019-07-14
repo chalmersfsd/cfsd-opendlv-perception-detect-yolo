@@ -81,6 +81,10 @@ if(UNIX)
     endif()
 endif()
 
+find_package(X11 REQUIRED)
+include_directories(SYSTEM ${X11_INCLUDE_DIR})
+set(LIBRARIES ${LIBRARIES} ${X11_X11_LIB})
+
 find_package(CUDA 10.0 EXACT REQUIRED)
 include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
 set(LIBRARIES ${LIBRARIES} ${CUDA_LIBRARIES})
