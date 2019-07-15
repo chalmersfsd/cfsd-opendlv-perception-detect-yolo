@@ -137,7 +137,7 @@ int32_t main(int32_t argc, char **argv) {
     uint32_t const height{static_cast<uint32_t>(
         std::stoi(commandlineArguments["height"]))};
     uint32_t const id{(commandlineArguments["id"].size() != 0) ?
-      static_cast<uint32_t>(std::stoi(commandlineArguments["height"])) : 0};
+      static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
     bool const verbose{commandlineArguments.count("verbose") != 0};
     
     Display* display{nullptr};
@@ -262,7 +262,6 @@ int32_t main(int32_t argc, char **argv) {
 
             uint32_t const objectId = n * 1000 + detection.track_id;
 
-            /*
             opendlv::logic::perception::ObjectType coneType;
             coneType.type(static_cast<uint32_t>(detection.obj_id));
             coneType.objectId(objectId);
@@ -275,7 +274,7 @@ int32_t main(int32_t argc, char **argv) {
               conePos.objectId(objectId);
               od4.send(conePos, ts, id);
             }
-*/
+
             if (verbose) {
               std::cout << "  ...object-id=" << objectId << " i=" << detection.x
                 << ", j=" << detection.y << ", w=" << detection.w << ", h=" 
