@@ -258,7 +258,7 @@ int32_t main(int32_t argc, char **argv) {
           for (uint32_t n = 0; n < detections.size(); ++n) {
             auto detection = detections[n];
 
-            uint32_t objectId = n * 1000 + detection.track_id;
+            uint32_t const objectId = n * 1000 + detection.track_id;
 
             opendlv::logic::perception::ObjectType coneType;
             coneType.type(static_cast<uint32_t>(detection.obj_id));
@@ -273,9 +273,8 @@ int32_t main(int32_t argc, char **argv) {
               od4.send(conePos, ts, id);
             }
 
-
             if (verbose) {
-              std::cout << "  ... i=" << detection.x << ", j=" 
+              std::cout << "  ...object-id=" << objectId << " i=" << detection.x << ", j=" 
                 << detection.y << ", w=" << detection.w << ", h=" << detection.h 
                 << ", prob=" << detection.prob << ", id=" << detection.obj_id 
                 << ", tack id=" << detection.track_id << ", frame=" 
@@ -283,8 +282,20 @@ int32_t main(int32_t argc, char **argv) {
                 << ", y=" << detection.y_3d << ", z=" << detection.z_3d 
                 << std::endl;
 
+              std::array<std::array<uint8_t>> colors = {
+                {255, 255, 0},
+                {0, 255, 0},
+                {255, 0, 0},
+                {0, 0, 255},
+                {255, 0, 255},
+                {0, 255, 255},
+                {255, 255, 255},
+                {0, 0, 0}};
+
+              uint32_t const k = detection.obj_id % colors.size();
               drawBoxArgb(verboseImg, width, detection.x, detection.y,
-                  detection.w, detection.h, 255, 0, 0);
+                  detection.w, detection.h, colors[k][0], colors[k][0],
+                  colors[k][0]);
             }
           }
 
