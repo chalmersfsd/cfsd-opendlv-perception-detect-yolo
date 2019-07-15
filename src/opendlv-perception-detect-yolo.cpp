@@ -252,14 +252,17 @@ int32_t main(int32_t argc, char **argv) {
         if (detections.size() > 0) {
           cluon::data::TimeStamp ts{cluon::time::now()};
           
-          opendlv::logic::perception::ObjectFrameStart startMsg;
-          od4.send(startMsg, ts, id);
+          {
+            opendlv::logic::perception::ObjectFrameStart startMsg;
+            od4.send(startMsg, ts, id);
+          }
           
           for (uint32_t n = 0; n < detections.size(); ++n) {
             auto detection = detections[n];
 
             uint32_t const objectId = n * 1000 + detection.track_id;
 
+            /*
             opendlv::logic::perception::ObjectType coneType;
             coneType.type(static_cast<uint32_t>(detection.obj_id));
             coneType.objectId(objectId);
@@ -272,7 +275,7 @@ int32_t main(int32_t argc, char **argv) {
               conePos.objectId(objectId);
               od4.send(conePos, ts, id);
             }
-
+*/
             if (verbose) {
               std::cout << "  ...object-id=" << objectId << " i=" << detection.x
                 << ", j=" << detection.y << ", w=" << detection.w << ", h=" 
@@ -300,8 +303,10 @@ int32_t main(int32_t argc, char **argv) {
             }
           }
 
-          opendlv::logic::perception::ObjectFrameEnd endMsg;
-          od4.send(endMsg, cluon::time::now(), id);
+          {
+            opendlv::logic::perception::ObjectFrameEnd endMsg;
+            od4.send(endMsg, cluon::time::now(), id);
+          }
         }
 
         if (verbose) {
