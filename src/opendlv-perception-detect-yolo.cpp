@@ -282,7 +282,7 @@ int32_t main(int32_t argc, char **argv) {
                 << ", j=" << detection.y << ", w=" << detection.w << ", h=" 
                 << detection.h << ", prob=" << detection.prob << ", id=" 
                 << detection.obj_id << ", tack id=" << detection.track_id 
-                << ", frame=" << detection.frames_counter << ", x=" 
+                << ", frame=" << frameCount << ", x=" 
                 << detection.z_3d << ", y=" << -detection.x_3d << ", z=" 
                 << detection.y_3d << std::endl;
 
