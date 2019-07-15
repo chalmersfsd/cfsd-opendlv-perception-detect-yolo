@@ -247,9 +247,6 @@ int32_t main(int32_t argc, char **argv) {
               - cluon::time::toMicroseconds(t0));
           std::cout << "Frames per second: " << fps << ", found objects "
             << detections.size() << std::endl;
-          
-          XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
-              yoloImg.w, yoloImg.h);
         }
 
         if (detections.size() > 0) {
@@ -288,8 +285,14 @@ int32_t main(int32_t argc, char **argv) {
                   detection.w, detection.h, 255, 0, 0);
             }
           }
+
           opendlv::logic::perception::ObjectFrameEnd endMsg;
           od4.send(endMsg, cluon::time::now(), id);
+        }
+
+        if (verbose) {
+          XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
+              yoloImg.w, yoloImg.h);
         }
       }
 
