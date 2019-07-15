@@ -268,7 +268,7 @@ int32_t main(int32_t argc, char **argv) {
             if (!(std::isnan(detection.x_3d) && std::isnan(detection.y_3d))) {
               opendlv::logic::perception::ObjectPosition conePos;
               conePos.x(detection.z_3d);
-              conePos.y(detection.y_3d);
+              conePos.y(detection.x_3d);
               conePos.objectId(objectId);
               od4.send(conePos, ts, id);
             }
@@ -278,7 +278,7 @@ int32_t main(int32_t argc, char **argv) {
                 << detection.y << ", w=" << detection.w << ", h=" << detection.h 
                 << ", prob=" << detection.prob << ", id=" << detection.obj_id 
                 << ", tack id=" << detection.track_id << ", frame=" 
-                << detection.frames_counter << ", x=" << detection.y_3d 
+                << detection.frames_counter << ", x=" << detection.x_3d 
                 << ", y=" << detection.y_3d << ", z=" << detection.z_3d 
                 << std::endl;
 
