@@ -295,8 +295,8 @@ int32_t main(int32_t argc, char **argv) {
 
               uint32_t const k = detection.obj_id % colors.size();
               drawBoxArgb(verboseImg, width, detection.x, detection.y,
-                  detection.w, detection.h, colors[k][0], colors[k][0],
-                  colors[k][0]);
+                  detection.w, detection.h, colors[k][0], colors[k][1],
+                  colors[k][2]);
             }
           }
 
