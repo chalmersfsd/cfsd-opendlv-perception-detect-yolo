@@ -258,16 +258,18 @@ int32_t main(int32_t argc, char **argv) {
           for (uint32_t n = 0; n < detections.size(); ++n) {
             auto detection = detections[n];
 
+            uint32_t objectId = n * 1000 + detection.track_id;
+
             opendlv::logic::perception::ObjectType coneType;
             coneType.type(static_cast<uint32_t>(detection.obj_id));
-            coneType.objectId(detection.track_id);
+            coneType.objectId(objectId);
             od4.send(coneType, ts, id);
 
             if (!(std::isnan(detection.x_3d) && std::isnan(detection.y_3d))) {
               opendlv::logic::perception::ObjectPosition conePos;
               conePos.x(detection.x_3d);
               conePos.y(detection.y_3d);
-              conePos.objectId(detection.track_id);
+              conePos.objectId(objectId);
               od4.send(conePos, ts, id);
             }
 
