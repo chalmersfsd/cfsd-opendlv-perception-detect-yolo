@@ -197,6 +197,7 @@ int32_t main(int32_t argc, char **argv) {
       cluon::OD4Session od4{static_cast<uint16_t>(
           std::stoi(commandlineArguments["cid"]))};
 
+      uint64_t frameCount{0};
       while (od4.isRunning()) {
         cluon::data::TimeStamp t0 = cluon::time::now();
         shmArgb->wait();
@@ -254,6 +255,7 @@ int32_t main(int32_t argc, char **argv) {
           
           {
             opendlv::logic::perception::ObjectFrameStart startMsg;
+            startMsg.objectFrameId(frameCount);
             od4.send(startMsg, ts, id);
           }
           
@@ -304,6 +306,7 @@ int32_t main(int32_t argc, char **argv) {
 
           {
             opendlv::logic::perception::ObjectFrameEnd endMsg;
+            endMsg.objectFrameId(frameCount);
             od4.send(endMsg, cluon::time::now(), id);
           }
         }
@@ -312,6 +315,7 @@ int32_t main(int32_t argc, char **argv) {
           XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
               yoloImg.w, yoloImg.h);
         }
+        frameCount++;
       }
 
       delete[] yoloImg.data;
