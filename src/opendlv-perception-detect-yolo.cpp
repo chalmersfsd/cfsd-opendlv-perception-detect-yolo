@@ -282,15 +282,16 @@ int32_t main(int32_t argc, char **argv) {
                 << ", y=" << detection.y_3d << ", z=" << detection.z_3d 
                 << std::endl;
 
-              std::array<std::array<uint8_t>> colors = {
-                {255, 255, 0},
-                {0, 255, 0},
-                {255, 0, 0},
-                {0, 0, 255},
-                {255, 0, 255},
-                {0, 255, 255},
-                {255, 255, 255},
-                {0, 0, 0}};
+              std::array<std::array<uint8_t, 3>, 8> colors{{
+                {{255, 255, 0}},
+                {{0, 255, 0}},
+                {{255, 0, 0}},
+                {{0, 0, 255}},
+                {{255, 0, 255}},
+                {{0, 255, 255}},
+                {{255, 255, 255}},
+                {{0, 0, 0}}
+              }};
 
               uint32_t const k = detection.obj_id % colors.size();
               drawBoxArgb(verboseImg, width, detection.x, detection.y,
