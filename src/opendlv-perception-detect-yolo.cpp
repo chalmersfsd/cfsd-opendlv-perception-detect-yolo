@@ -240,27 +240,56 @@ int32_t main(int32_t argc, char **argv) {
         }
         shmXyz->unlock();
 
+
         if (verbose) {
-          float fps = 1000000.0f / 
-              (cluon::time::toMicroseconds(cluon::time::now())
-                - cluon::time::toMicroseconds(t0));
+          float fps = 1000000.0f /
+            (cluon::time::toMicroseconds(cluon::time::now())
+              - cluon::time::toMicroseconds(t0));
           std::cout << "Frames per second: " << fps << ", found objects "
             << detections.size() << std::endl;
-          for (auto &detection : detections) {
-            std::cout << "  ... i=" << detection.x << ", j=" 
-              << detection.y << ", w=" << detection.w << ", h=" << detection.h 
-              << ", prob=" << detection.prob << ", id=" << detection.obj_id 
-              << ", tack id=" << detection.track_id << ", frame=" 
-              << detection.frames_counter << ", x=" << detection.x_3d 
-              << ", y=" << detection.y_3d << ", z=" << detection.z_3d 
-              << std::endl;
-
-            drawBoxArgb(verboseImg, width, detection.x, detection.y,
-                detection.w, detection.h, 255, 0, 0);
-          }
-
+          
           XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
               yoloImg.w, yoloImg.h);
+        }
+
+        if (detections.size() > 0) {
+          cluon::data::TimeStamp ts{cluon::time::now()};
+          
+          opendlv::logic::perception::ObjectFrameStart startMsg;
+          od4.send(startMsg, ts, id);
+          
+          for (uint32_t n = 0; n < detections.size(); ++n) {
+            auto detection = detections[n];
+
+            opendlv::logic::perception::ObjectType coneType;
+            coneType.type(static_cast<uint32_t>(detection.obj_id));
+            coneType.objectId(detection.track_id);
+            od4.send(coneType, ts, id);
+
+            if (!(std::isnan(detection.x_3d) && std::isnan(detection.y_3d))) {
+              opendlv::logic::perception::ObjectPosition conePos;
+              conePos.x(detection.x_3d);
+              conePos.y(detection.y_3d);
+              conePos.objectId(detection.track_id);
+              od4.send(conePos, ts, id);
+            }
+
+
+            if (verbose) {
+              std::cout << "  ... i=" << detection.x << ", j=" 
+                << detection.y << ", w=" << detection.w << ", h=" << detection.h 
+                << ", prob=" << detection.prob << ", id=" << detection.obj_id 
+                << ", tack id=" << detection.track_id << ", frame=" 
+                << detection.frames_counter << ", x=" << detection.x_3d 
+                << ", y=" << detection.y_3d << ", z=" << detection.z_3d 
+                << std::endl;
+
+              drawBoxArgb(verboseImg, width, detection.x, detection.y,
+                  detection.w, detection.h, 255, 0, 0);
+            }
+          }
+          opendlv::logic::perception::ObjectFrameEnd endMsg;
+          od4.send(endMsg, cluon::time::now(), id);
         }
       }
 
