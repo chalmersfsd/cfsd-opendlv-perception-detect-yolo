@@ -18,6 +18,7 @@
 #ifndef BIRDVIEW_PERCEPTION
 #define BIRDVIEW_PERCEPTION
 
+#include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 
 #include <iostream>

@@ -134,7 +134,9 @@ cameraPara setupCameraPara(uint32_t height, uint32_t camera){
 
 opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara camPara, uint32_t x, uint32_t objHeight_pix, uint32_t objId){
 
-  opendlv::logic::perception::ObjectPosition conePos = {0.0, 0.0};
+  opendlv::logic::perception::ObjectPosition conePos;
+  conePos.x(0.0);
+  conePos.y(0.0);
   float realObjHeight_m = 0.0;
   float objHeightSensor_mm = 0.0;
 
@@ -152,9 +154,10 @@ opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara 
   }
 
   objHeightSensor_mm = camPara.sensHeight_mm * objHeight_pix / camPara.sensHeight_pix;
-  conePos.y = realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm;
-  conePos.x = (conePos.y*x-conePos.y*camPara.cx)/camPara.focLength_pix;
-  std::cout << "Distance by size:\tx:" << conePos.x << "\ty:" << conePos.y << std::endl;
+  conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm);
+  conePos.y( (conePos.x()*x-conePos.x()*camPara.cx)/camPara.focLength_pix);
+ 
+//  std::cout << "Distance by size:\tx:" << conePos.x() << "\ty:" << conePos.y() << std::endl;
 
   return conePos;
 }

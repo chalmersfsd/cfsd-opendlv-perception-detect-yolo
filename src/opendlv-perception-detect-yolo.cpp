@@ -252,7 +252,7 @@ int32_t main(int32_t argc, char **argv) {
         shmXyz->unlock();
 
 
-        if (verbose) {
+        if (verbose||1) {
           float fps = 1000000.0f /
             (cluon::time::toMicroseconds(cluon::time::now())
               - cluon::time::toMicroseconds(t0));
@@ -283,7 +283,7 @@ int32_t main(int32_t argc, char **argv) {
 #endif
               opendlv::logic::perception::ObjectPosition conePos;
 #ifdef DISTANCE_BY_SIZE
-              conePos = coordinatesDistanceBySize(camPara,detection.x,detection.h,detection.obj_id);
+              conePos = coordinatesDistanceBySize(camPara,detection.z_3d,detection.h,detection.obj_id);
 #else
               conePos.x(detection.z_3d);
               conePos.y(-detection.x_3d);
@@ -293,6 +293,14 @@ int32_t main(int32_t argc, char **argv) {
 #ifndef DISTANCE_BY_SIZE
             }
 #endif
+              std::cout << "  ...object-id=" << objectId << " i=" << detection.x
+                << ", j=" << detection.y << ", w=" << detection.w << ", h="
+                << detection.h << ", prob=" << detection.prob << ", id="
+                << detection.obj_id << ", tack id=" << detection.track_id
+                << ", frame=" << frameCount << ", x="
+                << detection.z_3d << ", y=" << -detection.x_3d << ", z="
+                << detection.y_3d << " Cone(x,y) = "<<conePos.x()<<" , "<< conePos.y() << std::endl;
+
             if (verbose) {
               std::cout << "  ...object-id=" << objectId << " i=" << detection.x
                 << ", j=" << detection.y << ", w=" << detection.w << ", h=" 
