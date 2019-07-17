@@ -278,8 +278,9 @@ int32_t main(int32_t argc, char **argv) {
             coneType.type(static_cast<uint32_t>(detection.obj_id));
             coneType.objectId(objectId);
             od4.send(coneType, ts, id);
-
+#ifndef DISTANCE_BY_SIZE
             if (!(std::isnan(detection.x_3d) && std::isnan(detection.y_3d))) {
+#endif
               opendlv::logic::perception::ObjectPosition conePos;
 #ifdef DISTANCE_BY_SIZE
               conePos = coordinatesDistanceBySize(camPara,detection.x,detection.h,detection.obj_id);
@@ -289,8 +290,9 @@ int32_t main(int32_t argc, char **argv) {
 #endif
               conePos.objectId(objectId);
               od4.send(conePos, ts, id);
+#ifndef DISTANCE_BY_SIZE
             }
-
+#endif
             if (verbose) {
               std::cout << "  ...object-id=" << objectId << " i=" << detection.x
                 << ", j=" << detection.y << ", w=" << detection.w << ", h=" 
