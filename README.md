@@ -3,7 +3,7 @@
 ## Usage
 
 ``
-nvidia-docker run -ti --rm --privileged --init --ipc=host --net=host -e DISPLAY=$DISPLAY -v /tmp:/tmp -v ${PWD}/custom.cfg:/opt/yolo.cfg -v ${PWD}/custom.weights:/opt/yolo.weights chalmersrevere/opendlv-perception-detect-yolo-amd64:v0.0.1 opendlv-perception-detect-yolo --cid=111 --cfg-file=/opt/yolo.cfg --weight-file=/opt/yolo.weights --width=1280 --height=720 --verbose
+nvidia-docker run -ti --rm --privileged --init --ipc=host --net=host -e DISPLAY=$DISPLAY -v /tmp:/tmp -v ${PWD}/custom.cfg:/opt/yolo.cfg -v ${PWD}/custom.weights:/opt/yolo.weights chalmersrevere/opendlv-perception-detect-yolo-amd64:v0.0.1 opendlv-perception-detect-yolo --cid=111 --cfg-file=/opt/yolo.cfg --weight-file=/opt/yolo.weights --width=1280 --height=720 --camera=0 --verbose
 ``
 
 ## License
