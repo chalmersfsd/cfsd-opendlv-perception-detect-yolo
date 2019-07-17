@@ -20,7 +20,6 @@
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
-#include "cfsd-extended-message-set.hpp"
 #include "../darknet/include/yolo_v2_class.hpp"
 
 #include <iostream>
