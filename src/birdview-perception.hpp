@@ -24,11 +24,12 @@
 #include <iostream>
 
 struct cameraPara {
-  float focLength_mm = 0.0;
-  float sensHeight_mm = 0.0;
-  float cx = 0.0;
-  uint32_t focLength_pix = 0;
-  uint32_t sensHeight_pix = 0;
+  double focLength_mm = 0.0;
+  double sensHeight_mm = 0.0;
+  double cx = 0.0;
+  double focLength_pix = 0.0;
+  double sensHeight_pix = 0.0;
+  double framewidth_mm = 0.0;
 };
 
 // Set up camera parameters

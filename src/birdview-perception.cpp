@@ -67,11 +67,19 @@ static double mtxLeft2K_Car[3][3] = {
   {0, 0, 1}
 };
 
+void printMatrix(double (*mtx)[3][3])
+{
+  std::cout << "=============This is matrix ============" << '\n';
+  std::cout << (*mtx)[0][0] << " " << (*mtx)[0][1] << " " << (*mtx)[0][2] << std::endl;
+  std::cout << (*mtx)[1][0] << " " << (*mtx)[1][1] << " " << (*mtx)[1][2] << std::endl;
+  std::cout << (*mtx)[2][0] << " " << (*mtx)[2][1] << " " << (*mtx)[2][2] << std::endl;
+}
+
 cameraPara setupCameraPara(uint32_t height, uint32_t camera){
 
-    static cameraPara camPara;
-    double (*mtx)[3][3];
-    float pixelSize_mm = 0.0;
+    cameraPara camPara;
+    double (*mtx)[3][3] = nullptr;
+    double pixelSize_mm = 0.0;
 
     switch(camera)  {
       //Camera used in car:
@@ -95,6 +103,7 @@ cameraPara setupCameraPara(uint32_t height, uint32_t camera){
             break;
           default:
             std::cout << "Wrong camera height" << std::endl;
+            break;
         }
         break;
       //Camera used in office:
@@ -118,13 +127,15 @@ cameraPara setupCameraPara(uint32_t height, uint32_t camera){
             break;
           default:
             std::cout << "Wrong camera height" << std::endl;
+            break;
         }
         break;
       default:
         std::cout << "Wrong camera type" << std::endl;
+        break;
     }
-  camPara.focLength_pix = *mtx[0][0];
-  camPara.cx = *mtx[0][2];
+  camPara.focLength_pix = (*mtx)[0][0];
+  camPara.cx = (*mtx)[0][2];
   camPara.sensHeight_pix = height;
   camPara.focLength_mm = camPara.focLength_pix * pixelSize_mm;
   camPara.sensHeight_mm = camPara.sensHeight_pix * pixelSize_mm;
@@ -137,8 +148,8 @@ opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara 
   opendlv::logic::perception::ObjectPosition conePos;
   conePos.x(0.0);
   conePos.y(0.0);
-  float realObjHeight_m = 0.0;
-  float objHeightSensor_mm = 0.0;
+  double realObjHeight_m = 0.0;
+  double objHeightSensor_mm = 0.0;
 
   switch(objId) {
     case 0:
@@ -151,13 +162,14 @@ opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara 
       //Big orange cone
       realObjHeight_m = 0.505;
       break;
+    default:
+      std::cout<<"Wrong object id: " << objId << std::endl;
+      break;
   }
 
   objHeightSensor_mm = camPara.sensHeight_mm * objHeight_pix / camPara.sensHeight_pix;
-  conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm);
-  conePos.y( (conePos.x()*x-conePos.x()*camPara.cx)/camPara.focLength_pix);
- 
-//  std::cout << "Distance by size:\tx:" << conePos.x() << "\ty:" << conePos.y() << std::endl;
+  conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm );
+  conePos.y( (conePos.x()*x - conePos.x()*camPara.cx) / camPara.focLength_pix );
 
   return conePos;
 }
