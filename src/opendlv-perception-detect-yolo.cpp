@@ -27,6 +27,9 @@
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
+#include "birdview-perception.hpp"
+
+//#define DISTANCE_BY_SIZE
 
 static uint8_t getPixelExtendArgb(char *img, uint32_t w, uint32_t h, int32_t x,
     int32_t y, uint32_t c)
@@ -109,7 +112,8 @@ int32_t main(int32_t argc, char **argv) {
       (0 == commandlineArguments.count("cfg-file")) ||
       (0 == commandlineArguments.count("weight-file")) ||
       (0 == commandlineArguments.count("width")) ||
-      (0 == commandlineArguments.count("height")) ) {
+      (0 == commandlineArguments.count("height")) ||
+      (0 == commandlineArguments.count("camera"))  ) {
     std::cerr << argv[0] << " detects and classifies objects in a camera feed "
       << "by using Yolo." << std::endl;
     std::cerr << "Usage:   " << argv[0] << " [--verbose]" << std::endl;
@@ -120,11 +124,12 @@ int32_t main(int32_t argc, char **argv) {
       << "formatted image (default: video0)" << std::endl;
     std::cerr << "     --width: the width of the images " << std::endl;
     std::cerr << "     --height: the height of the images " << std::endl;
+    std::cerr << "     --camera: on car: '0', in office: '1' " << std::endl;
     std::cerr << "     --id: sender id of output messages" << std::endl;
     std::cerr << "     --verbose: prints diagnostics data to screen" 
       << std::endl;
     std::cerr << "Example: " << argv[0] << " --cfg-file=yolo.cfg "
-      << "--weight-file=yolo.weight --width=1280 --height=720 [--name=video0] "
+      << "--weight-file=yolo.weight --width=1280 --height=720 --camera=0 [--name=video0] "
       << "[--name-depth=video0-depth] [--id=0] [--verbose]" << std::endl;
   } else {
     std::string const name{(commandlineArguments["name"].size() != 0) ? 
@@ -136,10 +141,15 @@ int32_t main(int32_t argc, char **argv) {
         std::stoi(commandlineArguments["width"]))};
     uint32_t const height{static_cast<uint32_t>(
         std::stoi(commandlineArguments["height"]))};
+    uint32_t const camera{static_cast<uint32_t>(
+        std::stoi(commandlineArguments["camera"]))};
     uint32_t const id{(commandlineArguments["id"].size() != 0) ?
       static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
     bool const verbose{commandlineArguments.count("verbose") != 0};
-    
+
+    //Set up camera parameters
+    cameraPara camPara = setupCameraPara(height,camera);
+
     Display* display{nullptr};
     Visual* visual{nullptr};
     Window window{0};
@@ -271,8 +281,12 @@ int32_t main(int32_t argc, char **argv) {
 
             if (!(std::isnan(detection.x_3d) && std::isnan(detection.y_3d))) {
               opendlv::logic::perception::ObjectPosition conePos;
+#ifdef DISTANCE_BY_SIZE
+              conePos = coordinatesDistanceBySize(camPara,detection.x,detection.h,detection.obj_id);
+#else
               conePos.x(detection.z_3d);
               conePos.y(-detection.x_3d);
+#endif
               conePos.objectId(objectId);
               od4.send(conePos, ts, id);
             }
