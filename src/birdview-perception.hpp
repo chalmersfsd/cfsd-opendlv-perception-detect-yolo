@@ -18,10 +18,20 @@
 #ifndef BIRDVIEW_PERCEPTION
 #define BIRDVIEW_PERCEPTION
 
+// Take stereo-vision depth value if depthConfidence
+// is above depthConfidenceThreshold. Units: %
+const float depthConfidenceThreshold = 55;
+
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
+#include <yolo_v2_class.hpp>
 
 #include <iostream>
+
+struct bboxConf_t : bbox_t {
+  float depthConfidence;
+  bboxConf_t(bbox_t& temp):bbox_t(temp), depthConfidence(0.0f){}
+};
 
 struct cameraPara {
   double focLength_mm = 0.0;
@@ -36,5 +46,5 @@ struct cameraPara {
 cameraPara setupCameraPara(uint32_t height, uint32_t camera);
 
 // Calculate conde distance by hight of cone in frame
-opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara camPara, uint32_t x, uint32_t objHeight_pix, uint32_t objId);
+opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxConf_t &detection, bool verbose = false);
 #endif

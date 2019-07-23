@@ -143,33 +143,44 @@ cameraPara setupCameraPara(uint32_t height, uint32_t camera){
   return camPara;
 }
 
-opendlv::logic::perception::ObjectPosition coordinatesDistanceBySize(cameraPara camPara, uint32_t x, uint32_t objHeight_pix, uint32_t objId){
+opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxConf_t &detection, bool verbose)
+{
 
   opendlv::logic::perception::ObjectPosition conePos;
   conePos.x(0.0);
   conePos.y(0.0);
-  double realObjHeight_m = 0.0;
-  double objHeightSensor_mm = 0.0;
+  if ( (detection.depthConfidence > depthConfidenceThreshold || detection.depthConfidence > detection.prob)
+        && !std::isnan(detection.z_3d))
+  {
+    conePos.x(detection.z_3d);
+    if (verbose) std::cout << "Taking distance from stereo with confidence " << detection.depthConfidence << std::endl;
+  }
+  else
+  {
+    if (verbose) std::cout << "Taking distance from cone size with confidence" << (int)(detection.prob*100) << std::endl;
+    double realObjHeight_m = 0.0;
+    double objHeightSensor_mm = 0.0;
 
-  switch(objId) {
-    case 0:
-    case 1:
-    case 2:
-      //Normal cone orange, yellow, blue
-      realObjHeight_m = 0.325;
-      break;
-    case 3:
-      //Big orange cone
-      realObjHeight_m = 0.505;
-      break;
-    default:
-      std::cout<<"Wrong object id: " << objId << std::endl;
-      break;
+    switch(detection.obj_id) {
+      case 0:
+      case 1:
+      case 2:
+        //Normal cone orange, yellow, blue
+        realObjHeight_m = 0.325;
+        break;
+      case 3:
+        //Big orange cone
+        realObjHeight_m = 0.505;
+        break;
+      default:
+        std::cout<<"Wrong object id: " << detection.obj_id << std::endl;
+        break;
+    }
+    objHeightSensor_mm = camPara.sensHeight_mm * detection.h / camPara.sensHeight_pix;
+    conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm );
   }
 
-  objHeightSensor_mm = camPara.sensHeight_mm * objHeight_pix / camPara.sensHeight_pix;
-  conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm );
-  conePos.y( (conePos.x()*x - conePos.x()*camPara.cx) / camPara.focLength_pix );
+  conePos.y( -(conePos.x()*detection.x - conePos.x()*camPara.cx) / camPara.focLength_pix );
 
   return conePos;
 }
