@@ -181,8 +181,11 @@ opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxC
 
     if((conePos.x() < depthDistanceThreshold) && !std::isnan(detection.z_3d))
     {
+      if (verbose) {
+        std::cout << "Overwriting cone-based distance "<< conePos.x() << " -> "
+          << detection.z_3d << " depth based, because of threshold distance.\n";
+      }
       conePos.x(detection.z_3d);
-      if (verbose) std::cout << "Overwriting distance from cone size because of threshold distance" << (int)(detection.prob*100) << std::endl;
     }
   }
 

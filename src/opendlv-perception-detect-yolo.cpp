@@ -256,7 +256,7 @@ int32_t main(int32_t argc, char **argv) {
           uint32_t i = static_cast<uint32_t>(
               detection.x + detection.w * 0.5f);
           uint32_t j = static_cast<uint32_t>(
-              detection.y + detection.h * 0.5f);
+              detection.y + detection.h);
 
           memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
           memcpy(&detection.y_3d,
