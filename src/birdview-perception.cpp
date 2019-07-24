@@ -178,6 +178,12 @@ opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxC
     }
     objHeightSensor_mm = camPara.sensHeight_mm * detection.h / camPara.sensHeight_pix;
     conePos.x( realObjHeight_m * camPara.focLength_mm / objHeightSensor_mm );
+
+    if((conePos.x() < depthDistanceThreshold) && !std::isnan(detection.z_3d))
+    {
+      conePos.x(detection.z_3d);
+      if (verbose) std::cout << "Overwriting distance from cone size because of threshold distance" << (int)(detection.prob*100) << std::endl;
+    }
   }
 
   conePos.y( -(conePos.x()*detection.x - conePos.x()*camPara.cx) / camPara.focLength_pix );

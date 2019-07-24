@@ -21,6 +21,7 @@
 // Take stereo-vision depth value if depthConfidence
 // is above depthConfidenceThreshold. Units: %
 const float depthConfidenceThreshold = 55;
+const float depthDistanceThreshold = 4;
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
