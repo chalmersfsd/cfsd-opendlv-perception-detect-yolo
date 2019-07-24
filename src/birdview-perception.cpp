@@ -149,7 +149,7 @@ opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxC
   opendlv::logic::perception::ObjectPosition conePos;
   conePos.x(0.0);
   conePos.y(0.0);
-  if ( (detection.depthConfidence > depthConfidenceThreshold || detection.depthConfidence > detection.prob)
+  if ( (detection.depthConfidence > depthConfidenceThreshold || detection.depthConfidence > detection.prob * 100)
         && !std::isnan(detection.z_3d))
   {
     conePos.x(detection.z_3d);
@@ -157,7 +157,7 @@ opendlv::logic::perception::ObjectPosition getDistance(cameraPara camPara, bboxC
   }
   else
   {
-    if (verbose) std::cout << "Taking distance from cone size with confidence" << (int)(detection.prob*100) << std::endl;
+    if (verbose) std::cout << "Taking distance from cone size with confidence " << (int)(detection.prob*100) << std::endl;
     double realObjHeight_m = 0.0;
     double objHeightSensor_mm = 0.0;
 
