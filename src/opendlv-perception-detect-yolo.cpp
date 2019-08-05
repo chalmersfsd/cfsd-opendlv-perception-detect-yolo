@@ -318,8 +318,8 @@ int32_t main(int32_t argc, char **argv) {
 
           opendlv::logic::perception::ObjectAngularBlob coneAngularBlob;
           coneAngularBlob.objectId(objectId);
-          coneAngularBlob.width(width);
-          coneAngularBlob.height(height);
+          coneAngularBlob.width(detection.w);
+          coneAngularBlob.height(detection.h);
           od4.send(coneAngularBlob, ts, id);
 
           if (verbose)
