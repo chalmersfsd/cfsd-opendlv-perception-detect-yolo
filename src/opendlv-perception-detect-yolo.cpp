@@ -148,6 +148,8 @@ int32_t main(int32_t argc, char **argv) {
       static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
     bool const verbose{commandlineArguments.count("verbose") != 0};
 
+    float const halfWidth{static_cast<float>(width) / 2.0f};
+
     //Set up camera parameters
     cameraPara camPara = setupCameraPara(height,camera);
 
@@ -301,6 +303,18 @@ int32_t main(int32_t argc, char **argv) {
           conePos = getDistance(camPara, detection, verbose);
           conePos.objectId(objectId);
           od4.send(conePos, ts, id);
+
+          opendlv::logic::perception::ObjectDirection coneDirection;
+          coneDirection.objectId(objectId);
+          coneDirection.azimuthAngle(halfWidth - (detection.x + 
+            static_cast<float>(detection.w) / 2.0f));
+          coneDirection.zenithAngle(static_cast<float>(height) - detection.y);
+          od4.send(coneDirection, ts, id);
+
+          opendlv::logic::perception::ObjectAngularBlob coneAngularBlob;
+          coneAngularBlob.objectId(objectId);
+          coneAngularBlob.width(width);
+          coneAngularBlob.height(height);
 
           if (verbose)
           {
