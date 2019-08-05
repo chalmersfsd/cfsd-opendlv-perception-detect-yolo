@@ -170,10 +170,13 @@ int32_t main(int32_t argc, char **argv) {
         << " bytes)." << std::endl;
     }
 
+    bool hasXyzData{false};
+
     std::cout << "Connecting to shared memory " << nameXyz << std::endl;
     std::unique_ptr<cluon::SharedMemory> shmXyz{
       new cluon::SharedMemory{nameXyz}};
     if (shmXyz && shmXyz->valid()) {
+      hasXyzData = true;
       std::clog << argv[0] << ": Attached to shared depth memory '"
         << shmXyz->name() << " (" << shmXyz->size()
         << " bytes)." << std::endl;
@@ -248,28 +251,30 @@ int32_t main(int32_t argc, char **argv) {
       std::vector<bboxConf_t> detections;
       for (auto &detection : temp) { detections.push_back(detection); }
 
-      shmXyz->wait();
-      shmXyz->lock();
-      shmDepthConf->lock();
-      {
-        char *depthData = shmXyz->data();
-        char* depthConfData = shmDepthConf->data();
-        for (auto &detection : detections) {
-          uint32_t i = static_cast<uint32_t>(
-              detection.x + detection.w * 0.5f);
-          uint32_t j = static_cast<uint32_t>(
-              detection.y + detection.h);
+      if (hasXyzData) {
+        shmXyz->wait();
+        shmXyz->lock();
+        shmDepthConf->lock();
+        {
+          char *depthData = shmXyz->data();
+          char* depthConfData = shmDepthConf->data();
+          for (auto &detection : detections) {
+            uint32_t i = static_cast<uint32_t>(
+                detection.x + detection.w * 0.5f);
+            uint32_t j = static_cast<uint32_t>(
+                detection.y + detection.h);
 
-          memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
-          memcpy(&detection.y_3d,
-              depthData + (j * width * 16 + i * 16 + 4), 4);
-          memcpy(&detection.z_3d,
-              depthData + (j * width * 16 + i * 16 + 8), 4);
-          memcpy(&detection.depthConfidence, depthConfData + (j * width * sizeof(float) + i * sizeof(float)), sizeof(float));
+            memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
+            memcpy(&detection.y_3d,
+                depthData + (j * width * 16 + i * 16 + 4), 4);
+            memcpy(&detection.z_3d,
+                depthData + (j * width * 16 + i * 16 + 8), 4);
+            memcpy(&detection.depthConfidence, depthConfData + (j * width * sizeof(float) + i * sizeof(float)), sizeof(float));
+          }
         }
+        shmDepthConf->unlock();
+        shmXyz->unlock();
       }
-      shmDepthConf->unlock();
-      shmXyz->unlock();
 
 
       if (verbose) {
