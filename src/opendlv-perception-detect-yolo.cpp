@@ -311,7 +311,7 @@ int32_t main(int32_t argc, char **argv) {
 
           opendlv::logic::perception::ObjectDirection coneDirection;
           coneDirection.objectId(objectId);
-          coneDirection.azimuthAngle(halfWidth - (detection.x + 
+          coneDirection.azimuthAngle(halfWidth - (detection.x +
             static_cast<float>(detection.w) / 2.0f));
           coneDirection.zenithAngle(static_cast<float>(height) - detection.y);
           od4.send(coneDirection, ts, id);
@@ -324,7 +324,7 @@ int32_t main(int32_t argc, char **argv) {
 
           if (verbose)
           {
-            std::string coneName[3] = {"Yellow", "Blue  ", "Red   "};
+            std::string coneName[4] = {"Yellow", "Blue  ", "Red   ", "BigRed"};
             std::cout << "  ...object-id=" << objectId << " i=" << detection.x
               << ", j=" << detection.y << ", w=" << detection.w << ", h="
               << detection.h << ", prob=" << detection.prob << ", Color="
