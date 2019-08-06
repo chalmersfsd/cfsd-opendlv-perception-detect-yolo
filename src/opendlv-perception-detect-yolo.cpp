@@ -103,6 +103,35 @@ static void drawBoxArgb(char *img, uint32_t width, uint32_t i0, uint32_t j0,
   }
 }
 
+void getDepthData(float *depthConfData, float *depthData, bboxConf_t &detection, uint32_t width, bool verbose = 0)
+{
+  uint32_t best_idx = 0;
+  float best_value = 0.0f;
+
+  for (uint16_t line = detection.y; line <= detection.y + detection.h/2; line++)
+  {
+    for (uint32_t idx = line * width + detection.x - detection.w/2; idx <= line * width + detection.x + detection.w/2; idx++)
+    {
+      if (depthConfData[idx] > best_value)
+      {
+        best_value = depthConfData[idx];
+        best_idx = idx;
+      }
+    }
+  }
+  detection.depthConfidence = best_value;
+  detection.x_3d = depthData[(best_idx * 4)];
+  detection.y_3d = depthData[(best_idx * 4) + 1];
+  detection.z_3d = depthData[(best_idx * 4) + 2];
+  if (verbose)
+  {
+    std::cout << "Taking depth data from position [" << best_idx / width << ", " << best_idx % width
+    << "] with boundaries on height [" << detection.y << ", " << detection.y + detection.h/2
+    << "] and width [" << detection.x - detection.w/2 << ", " << detection.x + detection.w/2
+    << "]" << std::endl;
+  }
+}
+
 int32_t main(int32_t argc, char **argv) {
   int32_t retCode{1};
   auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
@@ -230,15 +259,15 @@ int32_t main(int32_t argc, char **argv) {
       shmArgb->wait();
       shmArgb->lock();
 
-      resizeArgbToYoloImg(shmArgb->data(), yoloImg.data, width, height,
-          yoloImg.w, yoloImg.h, widthRatio, heightRatio, false);
-
       if (verbose) {
         memcpy(verboseImg, shmArgb->data(), shmArgb->size());
       }
+      resizeArgbToYoloImg(shmArgb->data(), yoloImg.data, width, height,
+          yoloImg.w, yoloImg.h, widthRatio, heightRatio, false);
+
       shmArgb->unlock();
 
-      std::vector<bbox_t> temp = detector.detect(yoloImg, 0.2f, true);
+      std::vector<bbox_t> temp = detector.detect(yoloImg, 0.5f, true);
 
       for (auto &detection : temp) {
         detection.x = static_cast<uint32_t>(widthRatio * detection.x);
@@ -259,17 +288,7 @@ int32_t main(int32_t argc, char **argv) {
           char *depthData = shmXyz->data();
           char* depthConfData = shmDepthConf->data();
           for (auto &detection : detections) {
-            uint32_t i = static_cast<uint32_t>(
-                detection.x + detection.w * 0.5f);
-            uint32_t j = static_cast<uint32_t>(
-                detection.y + detection.h);
-
-            memcpy(&detection.x_3d, depthData + (j * width * 16 + i * 16), 4);
-            memcpy(&detection.y_3d,
-                depthData + (j * width * 16 + i * 16 + 4), 4);
-            memcpy(&detection.z_3d,
-                depthData + (j * width * 16 + i * 16 + 8), 4);
-            memcpy(&detection.depthConfidence, depthConfData + (j * width * sizeof(float) + i * sizeof(float)), sizeof(float));
+            getDepthData((float*)depthConfData, (float*)depthData, detection, width, verbose);
           }
         }
         shmDepthConf->unlock();
@@ -348,14 +367,18 @@ int32_t main(int32_t argc, char **argv) {
             drawBoxArgb(verboseImg, width, detection.x, detection.y,
                 detection.w, detection.h, colors[k][0], colors[k][1],
                 colors[k][2]);
-            XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
-                yoloImg.w, yoloImg.h);
+
           }
         }
         opendlv::logic::perception::ObjectFrameEnd endMsg;
         endMsg.objectFrameId(frameCount);
         od4.send(endMsg, cluon::time::now(), id);
         frameCount++;
+      }
+      if(verbose)
+      {
+        XPutImage(display, window, DefaultGC(display, 0), ximage, 0, 0, 0, 0,
+                  width, height);
       }
     }
 
